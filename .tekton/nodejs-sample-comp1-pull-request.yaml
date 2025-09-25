@@ -26,9 +26,11 @@ spec:
   - name: output-image
     value: quay.io/redhat-user-workloads-stage/zxiong-tenant/nodejs-sample-comp1:on-pr-{{revision}}
   - name: image-expires-after
-    value: 5d
+    value: ""
   - name: dockerfile
     value: Dockerfile
+  - name: build-source-image
+    value: "true"
   pipelineSpec:
     description: |
       This pipeline is ideal for building container images from a Containerfile while maintaining trust after pipeline customization.
