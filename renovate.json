@@ -1,6 +1,6 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "description": "Renovate configuration using MintMaker's approach for automatic Tekton task updates with migrations",
+  "description": "Renovate configuration for Tekton task updates",
   "extends": [
     "config:recommended",
     ":gitSignOff"
@@ -8,58 +8,57 @@
   "platformCommit": "enabled",
   "branchPrefix": "konflux/renovate/",
   "prConcurrentLimit": 5,
-  "includePaths": [
-    "nodejs-devfile-sample-multiarch-pull-request.yaml",
-    "nodejs-devfile-sample-multiarch-push.yaml"
+  
+  "customManagers": [
+    {
+      "customType": "regex",
+      "fileMatch": [
+        "nodejs-devfile-sample-multiarch-pull-request.yaml",
+        "nodejs-devfile-sample-multiarch-push.yaml"
+      ],
+      "matchStrings": [
+        "value:\\s+(?<depName>quay\\.io/(?:konflux-ci/tekton-catalog|redhat-appstudio-tekton-catalog)/[^:]+):(?<currentValue>[^@\\s]+)(@(?<currentDigest>sha256:[a-f0-9]+))?"
+      ],
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "docker",
+      "extractVersionTemplate": "{{#if currentDigest}}{{currentValue}}@{{currentDigest}}{{else}}{{currentValue}}{{/if}}",
+      "depTypeTemplate": "tekton-task"
+    }
   ],
-  "tekton": {
-    "enabled": true,
-    "fileMatch": [
-      "\\.ya?ml$"
-    ],
-    "packageRules": [
-      {
-        "description": "Group all Konflux task updates together",
-        "matchPackageNames": [
-          "/^quay.io/konflux-ci/tekton-catalog//",
-          "/^quay.io/redhat-appstudio-tekton-catalog//"
-        ],
-        "enabled": true,
-        "groupName": "Konflux task references (test migration)",
-        "branchPrefix": "konflux/tasks-test/",
-        "commitMessageTopic": "Konflux task references",
-        "prCreation": "immediate",
-        "automerge": true,
-        "automergeType": "pr",
-        "automergeStrategy": "squash",
-        "ignoreTests": true,
-        "prBodyColumns": [
-          "Package",
-          "Change",
-          "Notes"
-        ],
-        "prBodyDefinitions": {
-          "Notes": "{{#if (or (containsString updateType 'minor') (containsString updateType 'major'))}}:warning: [Migration guide](https://github.com/konflux-ci/build-definitions/blob/main/task/{{{replace '^quay.io/(redhat-appstudio-tekton-catalog|konflux-ci/tekton-catalog)/task-' '' packageName}}}/{{{newVersion}}}/MIGRATION.md) :warning:{{/if}}"
-        },
-        "recreateWhen": "always",
-        "recreateClosed": true,
-        "rebaseWhen": "behind-base-branch",
-        "force": {
-          "constraints": null
-        },
-        "postUpgradeTasks": {
-          "commands": [
-            "pipeline-migration-tool migrate -f \"$RENOVATE_POST_UPGRADE_COMMAND_DATA_FILE\""
-          ],
-          "executionMode": "branch",
-          "dataFileTemplate": "[{{#each upgrades}}{\"depName\": \"{{{depName}}}\", \"currentValue\": \"{{{currentValue}}}\", \"currentDigest\": \"{{{currentDigest}}}\", \"newValue\": \"{{{newValue}}}\", \"newDigest\": \"{{{newDigest}}}\", \"packageFile\": \"{{{packageFile}}}\", \"parentDir\": \"{{{parentDir}}}\", \"depTypes\": [{{#each depTypes}}\"{{{this}}}\"{{#unless @last}},{{/unless}}{{/each}}]}{{#unless @last}},{{/unless}}{{/each}}]",
-          "fileFilters": [
-            "**/*.yaml",
-            "**/*.yml"
-          ]
-        }
-      }
-    ]
-  },
-  "dependencyDashboard": true
+  
+  "packageRules": [
+    {
+      "description": "Group all Konflux task updates together",
+      "matchDatasources": ["docker"],
+      "matchDepTypes": ["tekton-task"],
+      "matchPackageNames": [
+        "/^quay.io/konflux-ci/tekton-catalog//",
+        "/^quay.io/redhat-appstudio-tekton-catalog//"
+      ],
+      "groupName": "Konflux task references",
+      "groupSlug": "konflux-tasks",
+      "branchTopic": "konflux-tasks-upgrade",
+      "commitMessageTopic": "Konflux task references",
+      "prCreation": "immediate",
+      "automerge": false,
+      "ignoreTests": true,
+      "prBodyColumns": [
+        "Package",
+        "Change",
+        "Notes"
+      ],
+      "prBodyNotes": [
+        "{{#if (or (eq updateType 'minor') (eq updateType 'major'))}}:warning: Check migration guide for breaking changes :warning:{{/if}}"
+      ],
+      "recreateWhen": "always",
+      "recreateClosed": true,
+      "rebaseWhen": "behind-base-branch",
+      "pinDigests": true
+    }
+  ],
+  
+  "dependencyDashboard": true,
+  "dependencyDashboardAutoclose": true,
+  "branchConcurrentLimit": 1,
+  "prHourlyLimit": 0
 }
