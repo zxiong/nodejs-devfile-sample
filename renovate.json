@@ -8,13 +8,12 @@
   "platformCommit": "enabled",
   "branchPrefix": "konflux/renovate/",
   "prConcurrentLimit": 5,
-  
   "customManagers": [
     {
       "customType": "regex",
-      "fileMatch": [
-        "nodejs-devfile-sample-multiarch-pull-request.yaml",
-        "nodejs-devfile-sample-multiarch-push.yaml"
+      "managerFilePatterns": [
+        "/nodejs-devfile-sample-multiarch-pull-request.yaml/",
+        "/nodejs-devfile-sample-multiarch-push.yaml/"
       ],
       "matchStrings": [
         "value:\\s+(?<depName>quay\\.io/(?:konflux-ci/tekton-catalog|redhat-appstudio-tekton-catalog)/[^:]+):(?<currentValue>[^@\\s]+)(@(?<currentDigest>sha256:[a-f0-9]+))?"
@@ -25,12 +24,15 @@
       "depTypeTemplate": "tekton-task"
     }
   ],
-  
   "packageRules": [
     {
       "description": "Group all Konflux task updates together",
-      "matchDatasources": ["docker"],
-      "matchDepTypes": ["tekton-task"],
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchDepTypes": [
+        "tekton-task"
+      ],
       "matchPackageNames": [
         "/^quay.io/konflux-ci/tekton-catalog//",
         "/^quay.io/redhat-appstudio-tekton-catalog//"
@@ -51,12 +53,10 @@
         "{{#if (or (eq updateType 'minor') (eq updateType 'major'))}}:warning: Check migration guide for breaking changes :warning:{{/if}}"
       ],
       "recreateWhen": "always",
-      "recreateClosed": true,
       "rebaseWhen": "behind-base-branch",
       "pinDigests": true
     }
   ],
-  
   "dependencyDashboard": true,
   "dependencyDashboardAutoclose": true,
   "branchConcurrentLimit": 1,
